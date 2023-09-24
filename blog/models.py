@@ -1,7 +1,7 @@
 from django.db import models
 from django.urls import reverse
 from django.contrib.auth.models import User
-from django.db.models import Count
+from django.db.models import Count, Prefetch
 
 
 class PostQuerySet(models.QuerySet):
@@ -26,6 +26,10 @@ class PostQuerySet(models.QuerySet):
             post.comments_count = count_for_id[post.id]
         return self
 
+    def prefetch_tags(self):
+        tags = self.prefetch_related(Prefetch('tags', queryset=Tag.objects.all().annotate(Count('posts'))))
+        return tags
+
 
 class TagQuerySet(models.QuerySet):
 
@@ -41,8 +45,6 @@ class Post(models.Model):
     image = models.ImageField('Картинка')
     published_at = models.DateTimeField('Дата и время публикации')
 
-    objects = PostQuerySet.as_manager()
-
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -57,6 +59,8 @@ class Post(models.Model):
         'Tag',
         related_name='posts',
         verbose_name='Теги')
+    
+    objects = PostQuerySet.as_manager()
 
     def __str__(self):
         return self.title
