@@ -51,7 +51,7 @@ def index(request):
 
 def post_detail(request, slug):
     post = get_object_or_404(Post.objects.prefetch_tags().popular(), slug=slug)
-    comments = post.comments.all().select_related('author')
+    comments = post.comments.select_related('author')
 
     serialized_comments = []
     for comment in comments:
@@ -63,7 +63,7 @@ def post_detail(request, slug):
 
     likes = post.likes_count
 
-    related_tags = post.tags.all().annotate(Count('posts'))
+    related_tags = post.tags.annotate(Count('posts'))
 
     serialized_post = {
         'title': post.title,
